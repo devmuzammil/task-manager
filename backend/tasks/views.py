@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
 import resend
 from django.conf import settings
 
@@ -180,7 +181,12 @@ class VerifyEmailView(APIView):
         user.is_active = True
         user.save()
 
+        refresh = RefreshToken.for_user(user)
         return Response(
-            {"message": "Email verified successfully."},
+            {
+                "message": "Email verified successfully.",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
             status=status.HTTP_200_OK
         )

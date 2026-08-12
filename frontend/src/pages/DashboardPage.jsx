@@ -264,7 +264,7 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Welcome back</p>
             <p className="mt-4 text-lg font-semibold text-slate-900">{auth.user || 'User'}</p>
             <div className="mt-6 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700">
-              <p className="font-medium text-slate-900">Active tasks</p>
+              <p className="font-medium text-slate-900">Tasks</p>
               <p className="mt-2 text-3xl font-semibold text-slate-900">{taskCount}</p>
             </div>
           </aside>
