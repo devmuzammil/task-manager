@@ -29,9 +29,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
+DEBUG = True
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -131,7 +131,7 @@ STATIC_URL = 'static/'
 
 MAILERS = {
     'default': {
-        'BACKEND': os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'),
+        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
 
