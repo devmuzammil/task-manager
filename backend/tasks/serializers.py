@@ -8,6 +8,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = "__all__"
+        read_only_fields = ["id", "user", "created_at", "updated_at"]
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,6 +24,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validate_data["email"],
             password=validate_data["password"],
         )
+        user.is_active=False
+        user.save()
+        
         return user
 
 class ForgetPasswordSerializer(serializers.Serializer):
@@ -49,4 +53,4 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid or expired token.")
 
         data["user"] = user
-        return data
+        return data 

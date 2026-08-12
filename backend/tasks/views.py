@@ -8,6 +8,7 @@ from .serializers import TaskSerializer, RegisterSerializer, ForgetPasswordSeria
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 import resend
 from django.conf import settings
 
@@ -36,14 +37,14 @@ class TaskListView(APIView):
 class TaskDetailView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self,request,pk):
-            task=Task.objects.get(pk=pk,user=request.user)
-            serializer=TaskSerializer(task)
-    
-            return Response(serializer.data)
-    
+        task = get_object_or_404(Task, pk=pk, user=request.user)
+        serializer = TaskSerializer(task)
+
+        return Response(serializer.data)
+
     def put(self, request, pk):
-        task = Task.objects.get(pk=pk,user=request.user)
-        serializer = TaskSerializer(task, data=request.data)
+        task = get_object_or_404(Task, pk=pk, user=request.user)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -51,8 +52,8 @@ class TaskDetailView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self,request,pk):
-        task=Task.objects.get(pk=pk,user=request.user)
+    def delete(self, request, pk):
+        task = get_object_or_404(Task, pk=pk, user=request.user)
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -60,7 +61,29 @@ class RegisterView(APIView):
     def post(self,request):
         serializer=RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user= serializer.save()
+            token=default_token_generator.make_token(user)
+            verification_link = (
+                f"http://localhost:5173/verify-email/"
+                f"{user.id}/{token}/"
+            )
+            resend.api_key = settings.RESEND_API_KEY
+            resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": [user.email],
+                "subject": "Verify your Task Manager email",
+                "html": f"""
+                    <h2>Verify your email</h2>
+
+                    <p>Thanks for registering for Task Manager.</p>
+
+                    <p>
+                        <a href="{verification_link}">
+                            Verify Email
+                        </a>
+                    </p>
+                """
+            })
             return Response(
                 {
                     "message":"User Created Successfully",
@@ -136,4 +159,28 @@ class ResetPasswordView(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+class VerifyEmailView(APIView):
+    def get(self, request, user_id, token):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Invalid verification link."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"error": "Invalid or expired verification link."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.is_active = True
+        user.save()
+
+        return Response(
+            {"message": "Email verified successfully."},
+            status=status.HTTP_200_OK
         )
