@@ -65,7 +65,7 @@ class RegisterView(APIView):
             user= serializer.save()
             token=default_token_generator.make_token(user)
             verification_link = (
-                f"http://localhost:5173/verify-email/"
+                f"{settings.FRONTEND_URL}/verify-email/"
                 f"{user.id}/{token}/"
             )
             resend.api_key = settings.RESEND_API_KEY
@@ -108,7 +108,7 @@ class ForgetPasswordView(APIView):
 
             print("Token:",token)
 
-            reset_link = f"http://localhost:5173/reset-password/{user.id}/{token}/"
+            reset_link = f"{settings.FRONTEND_URL}/reset-password/{user.id}/{token}/"
 
             resend.api_key = settings.RESEND_API_KEY
 
